@@ -1,0 +1,186 @@
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <stdio.h>
+#include <ctime>
+#include <chrono>
+#include <thread>
+
+
+
+
+class Sensor {
+	public:
+		virtual void measure() = 0;
+		virtual void getData() = 0;
+		virtual void safetySweep() = 0;
+	
+	
+	
+	
+	
+};
+
+
+
+class GeigerCounter : public Sensor {
+	private:
+		int detectionCount;
+		int timeSinceLastMeasurement;
+		int currentTime;
+		double detectionRate;
+		double alarmThreshold;
+		bool alarm;
+	public:
+		void measure() override{
+		
+			detectionCount++;
+		
+		}
+		void getData() override{
+			int UnixTime;
+			time_t now;
+			
+			UnixTime=time(&now);
+			timeSinceLastMeasurement=UnixTime-currentTime;
+			detectionRate = detectionCount/timeSinceLastMeasurement;
+			std::cout << "detection rate:" << detectionRate << std::endl;
+			currentTime = UnixTime;
+			detectionCount = 0;
+			
+		}
+		void setAlarmThreshold(double threshold){
+			alarmThreshold=threshold;
+		}
+		void safetySweep() override{
+			if(alarmThreshold < detectionRate){
+				alarm = true;
+			}
+		
+		}
+		void clearAlarm(){
+			alarm = false;
+		}
+	
+	
+	
+};
+
+
+
+class LIDAR : public Sensor {
+		private:
+		int angles[90];
+		int maxRange;
+		int minRange;
+		int measurements[90];
+		bool collisionWarning[90];
+	public:
+		LIDAR(){
+			for(int i=0; i<90; i++){
+				angles[i]=i;
+				collisionWarning[i]=false;
+			}
+
+			maxRange=100;
+			minRange=10;
+			std::cout << "Initializing LIADR... \n" << std::endl;
+		}
+		void addDistance(int distance, int angle) {
+			if(distance > maxRange){
+				distance = maxRange;
+			}
+			measurements[angle]=distance;
+			if(distance < minRange){
+				collisionWarning[angle] = true;
+			}
+			else{
+				collisionWarning[angle] = false;
+			}
+		}
+		void measure() override {
+			for(int i=0; i<90; i++){
+				if(collisionWarning[i]==true){
+						std::cout << "WARNING angle:"  << i << "  distance: "<< measurements[i] << "\n" << std::endl;
+				}
+				else{
+						std::cout << " angle:"  << i << "  clear \n" << std::endl;
+				}
+				
+			}
+			
+			
+		}
+		double getDistance(int angle){
+			return measurements[angle];
+		}		
+		void getData() override{
+			double closest;
+			int closestAngle;
+			closest = maxRange;
+			for(int i=0; i<90; i++){
+				if(measurements[i]<closest){
+					closest = measurements[i];
+					closestAngle=i;
+				}
+				
+				
+			}
+			std::cout << closestAngle << std::endl;
+		}
+		void setMaxRange(int range){
+			maxRange = range;
+		}
+		void setMinRange(int range){
+			minRange = range;
+		}
+		void safetySweep() override{
+			for(int i=0; i<90; i++){
+				if(collisionWarning[i]==true){
+					std::cout << "collision warning" << std::endl;
+				}
+			}
+			
+		}
+	
+	
+	
+};
+
+
+
+int main(){
+	time_t now;
+	LIDAR L1;
+	GeigerCounter G1;
+	int a;
+	int unixtime;
+	unixtime = time(&now);
+	G1.measure();
+	
+	
+	for(int i=0; i<90; i++){
+		a = rand()%1000;
+		for(a; a>0; a--){
+			G1.measure();
+		}
+		std::chrono::milliseconds timespan(1000);
+		std::this_thread::sleep_for(timespan);
+		unixtime = time(&now);
+		G1.getData();
+		L1.addDistance(i,i);
+		
+		
+		
+		
+		
+		
+		
+		
+	}
+	
+	L1.safetySweep();
+	
+	
+	return 0;
+}
