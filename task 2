@@ -1,0 +1,57 @@
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <stdio.h>
+#include <ctime>
+#include <chrono>
+#include <thread>
+#include <cmath>
+
+
+
+class robot{
+	public:
+			class motor{
+				public:
+					void spin(int time){
+						currPosition = currPosition + time*3; 
+						
+					}
+					int getPosition(){
+						return currPosition;
+					}
+				private:
+					int currPosition;
+				
+				
+			};
+		void changePosition(int X){
+			motor M1;
+			M1.spin(X);
+			location=M1.getPosition();
+			
+		}
+		void printLocation(){
+			std::cout << location << std::endl;
+		}
+	private:
+		int location;
+		
+	
+	
+	
+	
+};
+
+
+
+int main(){
+	robot R1;
+	R1.changePosition(3);
+	R1.printLocation();
+	
+	return 0;
+	
+	
+	
+}
